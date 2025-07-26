@@ -8,8 +8,8 @@ ON CONFLICT (id) DO NOTHING;
 
 -- Initial users for SLC
 INSERT INTO users (id, first_name, last_name, avatar) VALUES 
-(1, 'Kurt', '', '🧑‍🍳'),
-(2, 'Kaya', '', '👩‍🍳')
+(1, 'Kurt', '', '🚵🏼‍♂️'),
+(2, 'Kaya', '', '💅')
 ON CONFLICT (id) DO NOTHING;
 
 -- Workspace membership
