@@ -8,14 +8,17 @@ interface TRPCProviderProps {
 }
 
 export function TRPCProvider({ children }: TRPCProviderProps) {
-  const [queryClient] = useState(() => new QueryClient({
-    defaultOptions: {
-      queries: {
-        staleTime: 5 * 60 * 1000, // 5 minutes
-        retry: 1,
-      },
-    },
-  }));
+  const [queryClient] = useState(
+    () =>
+      new QueryClient({
+        defaultOptions: {
+          queries: {
+            staleTime: 5 * 60 * 1000, // 5 minutes
+            retry: 1,
+          },
+        },
+      })
+  );
 
   const [trpcClient] = useState(() =>
     trpc.createClient({
@@ -33,11 +36,11 @@ export function TRPCProvider({ children }: TRPCProviderProps) {
     })
   );
 
+  const { Provider } = trpc;
+
   return (
-    <trpc.Provider client={trpcClient} queryClient={queryClient}>
-      <QueryClientProvider client={queryClient}>
-        {children}
-      </QueryClientProvider>
-    </trpc.Provider>
+    <Provider client={trpcClient} queryClient={queryClient}>
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    </Provider>
   );
 }

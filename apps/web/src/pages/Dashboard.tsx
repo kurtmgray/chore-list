@@ -1,16 +1,20 @@
 import { useState } from 'react';
+import { Link } from '@tanstack/react-router';
 import { trpc } from '../lib/trpc';
 import { useUser } from '../contexts/UserContext';
 import { ChoreCard } from '../components/ChoreCard';
 import { ChoreForm } from '../components/ChoreForm';
 import { ReassignModal } from '../components/ReassignModal';
+import { ChoreDetailModal } from '../components/ChoreDetailModal';
 import { PageTransition, StaggeredList, FadeInUp } from '../components/PageTransition';
+import { Button } from '../components/ui/Button';
 
 export function Dashboard() {
   const { currentUser } = useUser();
   
   // Modal states
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [detailChoreId, setDetailChoreId] = useState<number | null>(null);
   
   // Debug the modal state
   console.log('Dashboard render - isCreateModalOpen:', isCreateModalOpen);
@@ -20,7 +24,7 @@ export function Dashboard() {
     assignee?: { id: number; first_name: string; avatar: string; } | null;
   } | null>(null);
   
-  // Test tRPC connection
+  // Dashboard data - minimal queries for critical info only
   const { data: users, isLoading: usersLoading } = trpc.users.getAll.useQuery();
   const { data: categories, isLoading: categoriesLoading } = trpc.categories.getAll.useQuery();
   const { data: dashboard, isLoading: dashboardLoading } = trpc.chores.getDashboard.useQuery();
@@ -61,6 +65,26 @@ export function Dashboard() {
     });
   };
 
+  const handleChoreClick = (chore: any) => {
+    setDetailChoreId(chore.id);
+  };
+
+  const handleDetailReassign = () => {
+    if (detailChoreId) {
+      // Find chore in dashboard data
+      const allDashboardChores = [
+        ...(dashboard?.overdue || []),
+        ...(dashboard?.upcoming || [])
+      ];
+      const chore = allDashboardChores.find(c => c.id === detailChoreId);
+      if (chore) {
+        handleReassignClick(chore);
+        setDetailChoreId(null);
+      }
+    }
+  };
+
+
   return (
     <PageTransition>
       <div className="space-y-4 lg:space-y-6">
@@ -90,14 +114,15 @@ export function Dashboard() {
             </p>
           </div>
           
-          {/* Enhanced Floating Action Button */}
-          <button
+          {/* New Chore Button */}
+          <Button
             onClick={() => setIsCreateModalOpen(true)}
-            className="gradient-primary rounded-xl p-3 lg:p-4 button-hover shadow-floating pulse-glow"
-            style={{ color: 'white' }}
+            variant="primary"
+            className="shadow-floating pulse-glow"
           >
-            <span className="text-lg lg:text-xl">+</span>
-          </button>
+            <span className="mr-2">+</span>
+            New Chore
+          </Button>
         </div>
 
         {/* Inline stats - horizontal scroll on mobile */}
@@ -169,6 +194,7 @@ export function Dashboard() {
                     key={chore.id} 
                     chore={chore} 
                     onReassign={() => handleReassignClick(chore)}
+                    onClick={() => handleChoreClick(chore)}
                   />
                 ))}
               </StaggeredList>
@@ -195,6 +221,7 @@ export function Dashboard() {
                     key={chore.id} 
                     chore={chore} 
                     onReassign={() => handleReassignClick(chore)}
+                    onClick={() => handleChoreClick(chore)}
                   />
                 ))}
               </StaggeredList>
@@ -255,6 +282,7 @@ export function Dashboard() {
           </FadeInUp>
         )}
 
+
       {/* Enhanced Create Chore Modal */}
       {isCreateModalOpen && (
         <div 
@@ -301,6 +329,16 @@ export function Dashboard() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Chore Detail Modal */}
+      {detailChoreId && (
+        <ChoreDetailModal
+          isOpen={true}
+          onClose={() => setDetailChoreId(null)}
+          choreId={detailChoreId}
+          onReassign={handleDetailReassign}
+        />
       )}
 
       {/* Reassign Modal */}

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { trpc } from '../lib/trpc';
 import { Modal } from './Modal';
 import { UserAvatar } from './UserAvatar';
+import { Button } from './ui/Button';
 
 interface ReassignModalProps {
   isOpen: boolean;
@@ -29,12 +30,73 @@ export function ReassignModal({
   const [reason, setReason] = useState('');
 
   const reassignMutation = trpc.chores.reassign.useMutation({
+    onMutate: async ({ toUserId }) => {
+      // Cancel any outgoing refetches
+      await utils.chores.getDashboard.cancel();
+      await utils.chores.getAll.cancel();
+
+      // Snapshot the previous values
+      const previousDashboard = utils.chores.getDashboard.getData();
+      const previousAllChores = utils.chores.getAll.getData();
+
+      // Find the new assignee info
+      const newAssignee = users?.find(u => u.id === toUserId);
+
+      // Optimistically update dashboard
+      if (previousDashboard && newAssignee) {
+        const updateChoreAssignment = (chore: any) => 
+          chore.id === choreId 
+            ? { 
+                ...chore, 
+                assigned_to: toUserId,
+                first_name: newAssignee.first_name,
+                avatar: newAssignee.avatar
+              }
+            : chore;
+
+        utils.chores.getDashboard.setData(undefined, {
+          ...previousDashboard,
+          overdue: previousDashboard.overdue.map(updateChoreAssignment),
+          upcoming: previousDashboard.upcoming.map(updateChoreAssignment),
+        });
+      }
+
+      // Optimistically update all chores
+      if (previousAllChores && newAssignee) {
+        utils.chores.getAll.setData({},
+          previousAllChores.map(chore => 
+            chore.id === choreId 
+              ? { 
+                  ...chore, 
+                  assigned_to: toUserId,
+                  first_name: newAssignee.first_name,
+                  avatar: newAssignee.avatar
+                }
+              : chore
+          )
+        );
+      }
+
+      return { previousDashboard, previousAllChores };
+    },
+    onError: (_err, _variables, context) => {
+      // Roll back optimistic updates on error
+      if (context?.previousDashboard) {
+        utils.chores.getDashboard.setData(undefined, context.previousDashboard);
+      }
+      if (context?.previousAllChores) {
+        utils.chores.getAll.setData({}, context.previousAllChores);
+      }
+    },
     onSuccess: () => {
-      utils.chores.getDashboard.invalidate();
-      utils.chores.getAll.invalidate();
       onClose();
       setSelectedUserId(null);
       setReason('');
+    },
+    onSettled: () => {
+      // Always refetch to ensure data consistency
+      utils.chores.getDashboard.invalidate();
+      utils.chores.getAll.invalidate();
     },
   });
 
@@ -68,8 +130,14 @@ export function ReassignModal({
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Current Assignment */}
         {currentAssignee && (
-          <div className="bg-gray-50 rounded-lg p-4">
-            <h4 className="text-sm font-medium text-gray-700 mb-2">
+          <div 
+            className="rounded-lg p-4"
+            style={{ background: 'var(--gradient-elevated)' }}
+          >
+            <h4 
+              className="text-sm font-medium mb-2"
+              style={{ color: 'var(--neutral-700)' }}
+            >
               Currently assigned to:
             </h4>
             <div className="flex items-center space-x-3">
@@ -78,14 +146,22 @@ export function ReassignModal({
                 name={currentAssignee.first_name}
                 size="md"
               />
-              <span className="font-medium">{currentAssignee.first_name}</span>
+              <span 
+                className="font-medium"
+                style={{ color: 'var(--neutral-900)' }}
+              >
+                {currentAssignee.first_name}
+              </span>
             </div>
           </div>
         )}
 
         {/* New Assignment */}
         <div>
-          <h4 className="text-sm font-medium text-gray-700 mb-3">
+          <h4 
+            className="text-sm font-medium mb-3"
+            style={{ color: 'var(--neutral-700)' }}
+          >
             Reassign to:
           </h4>
           <div className="grid grid-cols-1 gap-3">
@@ -94,13 +170,18 @@ export function ReassignModal({
                 key={user.id}
                 type="button"
                 onClick={() => setSelectedUserId(user.id)}
-                className={`
-                  p-3 rounded-lg border-2 text-left transition-colors
-                  ${selectedUserId === user.id
-                    ? 'border-blue-500 bg-blue-50'
-                    : 'border-gray-200 hover:border-gray-300'
-                  }
-                `}
+                className="p-3 rounded-lg border-2 text-left transition-all duration-200 interactive-scale"
+                style={{
+                  borderColor: selectedUserId === user.id 
+                    ? 'var(--primary-500)' 
+                    : 'var(--neutral-200)',
+                  backgroundColor: selectedUserId === user.id 
+                    ? 'var(--primary-50)' 
+                    : 'var(--bg-surface)',
+                  boxShadow: selectedUserId === user.id 
+                    ? 'var(--shadow-md)' 
+                    : 'var(--shadow-sm)'
+                }}
               >
                 <div className="flex items-center space-x-3">
                   <UserAvatar 
@@ -108,7 +189,12 @@ export function ReassignModal({
                     name={user.first_name}
                     size="md"
                   />
-                  <span className="font-medium">{user.first_name}</span>
+                  <span 
+                    className="font-medium"
+                    style={{ color: 'var(--neutral-900)' }}
+                  >
+                    {user.first_name}
+                  </span>
                 </div>
               </button>
             ))}
@@ -117,36 +203,46 @@ export function ReassignModal({
 
         {/* Reason (Optional) */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label 
+            className="block text-sm font-medium mb-2"
+            style={{ color: 'var(--neutral-700)' }}
+          >
             Reason (Optional)
           </label>
           <textarea
             value={reason}
             onChange={(e) => setReason(e.target.value)}
             rows={3}
-            className="w-full rounded-md border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+            className="w-full rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 resize-none transition-all duration-200"
+            style={{
+              backgroundColor: 'var(--bg-surface)',
+              borderColor: 'var(--neutral-200)',
+              color: 'var(--neutral-900)'
+            }}
             placeholder="Why is this chore being reassigned?"
           />
         </div>
 
         {/* Actions */}
         <div className="flex space-x-3">
-          <button
+          <Button
             type="submit"
-            disabled={!selectedUserId || reassignMutation.isPending}
-            className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-md font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            variant="primary"
+            disabled={!selectedUserId}
+            isLoading={reassignMutation.isPending}
+            className="flex-1"
           >
             {reassignMutation.isPending ? 'Reassigning...' : 'Reassign Chore'}
-          </button>
+          </Button>
           
-          <button
+          <Button
             type="button"
+            variant="secondary"
             onClick={handleClose}
             disabled={reassignMutation.isPending}
-            className="px-4 py-2 border border-gray-300 rounded-md font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 transition-colors"
           >
             Cancel
-          </button>
+          </Button>
         </div>
       </form>
     </Modal>

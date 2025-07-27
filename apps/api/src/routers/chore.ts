@@ -105,10 +105,38 @@ export const choreRouter = router({
         .limit(5)
         .execute();
 
+      // Get workload balance data - completions by user in last 30 days
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+      const workloadBalance = await ctx.db
+        .selectFrom('users')
+        .leftJoin('completions', (join) =>
+          join
+            .onRef('users.id', '=', 'completions.completed_by')
+            .on('completions.workspace_id', '=', ctx.workspaceId)
+            .on('completions.completed_at', '>=', thirtyDaysAgo)
+        )
+        .leftJoin('workspace_members', (join) =>
+          join
+            .onRef('users.id', '=', 'workspace_members.user_id')
+            .on('workspace_members.workspace_id', '=', ctx.workspaceId)
+        )
+        .select([
+          'users.id',
+          'users.first_name',
+          'users.avatar',
+          ctx.db.fn.count('completions.id').as('completion_count'),
+        ])
+        .where('workspace_members.workspace_id', '=', ctx.workspaceId)
+        .groupBy(['users.id', 'users.first_name', 'users.avatar'])
+        .execute();
+
       return {
         overdue,
         upcoming,
         recentCompletions,
+        workloadBalance,
       };
     }),
 

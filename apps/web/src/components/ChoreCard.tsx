@@ -17,14 +17,57 @@ interface ChoreCardProps {
   chore: Chore;
   onComplete?: () => void;
   onReassign?: () => void;
+  onClick?: () => void;
 }
 
-export function ChoreCard({ chore, onComplete, onReassign }: ChoreCardProps) {
+export function ChoreCard({ chore, onComplete, onReassign, onClick }: ChoreCardProps) {
   const utils = trpc.useUtils();
 
   const completeMutation = trpc.chores.complete.useMutation({
-    onSuccess: () => {
+    onMutate: async () => {
+      // Cancel any outgoing refetches so they don't overwrite our optimistic update
+      await utils.chores.getDashboard.cancel();
+      await utils.chores.getAll.cancel();
+
+      // Snapshot the previous value
+      const previousDashboard = utils.chores.getDashboard.getData();
+      const previousAllChores = utils.chores.getAll.getData();
+
+      // Optimistically update dashboard - remove from overdue/upcoming
+      if (previousDashboard) {
+        utils.chores.getDashboard.setData(undefined, {
+          ...previousDashboard,
+          overdue: previousDashboard.overdue.filter(c => c.id !== chore.id),
+          upcoming: previousDashboard.upcoming.filter(c => c.id !== chore.id),
+        });
+      }
+
+      // Optimistically update all chores if they exist
+      if (previousAllChores) {
+        const updatedChores = previousAllChores.map(c => 
+          c.id === chore.id 
+            ? { ...c, status: 'completed' as const, last_completed: new Date().toISOString() }
+            : c
+        );
+        utils.chores.getAll.setData({}, updatedChores);
+      }
+
+      // Return a context object with the snapshotted value
+      return { previousDashboard, previousAllChores };
+    },
+    onError: (_err, _variables, context) => {
+      // If the mutation fails, use the context returned from onMutate to roll back
+      if (context?.previousDashboard) {
+        utils.chores.getDashboard.setData(undefined, context.previousDashboard);
+      }
+      if (context?.previousAllChores) {
+        utils.chores.getAll.setData({}, context.previousAllChores);
+      }
+    },
+    onSettled: () => {
+      // Always refetch after error or success to ensure we have up-to-date data
       utils.chores.getDashboard.invalidate();
+      utils.chores.getAll.invalidate();
       onComplete?.();
     },
   });
@@ -61,7 +104,7 @@ export function ChoreCard({ chore, onComplete, onReassign }: ChoreCardProps) {
 
   return (
     <div
-      className="relative rounded-lg p-3 interactive-scale border fade-in"
+      className="relative rounded-lg p-3 interactive-scale border fade-in cursor-pointer"
       style={{
         background: 'var(--gradient-surface)',
         borderColor: isOverdue
@@ -71,6 +114,7 @@ export function ChoreCard({ chore, onComplete, onReassign }: ChoreCardProps) {
           : 'var(--neutral-200)',
         boxShadow: 'var(--shadow-sm)',
       }}
+      onClick={onClick}
     >
       {/* Status indicator bar */}
       <div
@@ -171,7 +215,10 @@ export function ChoreCard({ chore, onComplete, onReassign }: ChoreCardProps) {
           {chore.status !== 'completed' && chore.status !== null && (
             <div className="flex gap-1">
               <button
-                onClick={handleComplete}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleComplete();
+                }}
                 disabled={completeMutation.isPending}
                 className="p-2 rounded-md button-hover"
                 style={{
@@ -184,7 +231,10 @@ export function ChoreCard({ chore, onComplete, onReassign }: ChoreCardProps) {
               </button>
 
               <button
-                onClick={onReassign}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onReassign?.();
+                }}
                 className="p-2 rounded-md button-hover"
                 style={{
                   background: 'var(--gradient-elevated)',

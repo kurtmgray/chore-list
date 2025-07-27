@@ -161,10 +161,105 @@ font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, 
 - **Due today**: warning-amber background with white text
 - **Upcoming**: primary-100 background with primary-700 text
 
+## Navigation System
+
+### Multi-Page Architecture
+
+The application uses a focused multi-page structure that separates concerns across specialized views:
+
+- **🏠 Dashboard**: At-a-glance critical information (overdue, today's tasks)
+- **📋 All Chores**: Comprehensive management with advanced filtering
+- **⚖️ Balance**: Workload tracking and fairness insights  
+- **⚙️ Settings**: Configuration and user management
+
+### Responsive Navigation Pattern
+
+#### Desktop Navigation (≥768px)
+- **Left sidebar**: 240px wide, collapsible to 64px icon-only
+- **Visual hierarchy**: Icons + labels, clear active states
+- **Behavior**: Hover to expand when collapsed, persistent when expanded
+
+#### Mobile Navigation (<768px) 
+- **Bottom tab bar**: Fixed at bottom, 4 primary tabs
+- **Thumb-friendly**: 56px touch targets, optimized for one-handed use
+- **Visual feedback**: Active tab highlighted with primary color
+
+### Navigation Components
+
+#### Desktop Sidebar
+```css
+.navigation-sidebar {
+  width: 240px; /* expanded */
+  width: 64px;  /* collapsed */
+  background: var(--bg-surface);
+  border-right: 1px solid var(--neutral-200);
+  box-shadow: var(--shadow-sm);
+}
+
+.nav-item {
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin: 4px 8px;
+  transition: all 200ms ease;
+}
+
+.nav-item:hover {
+  background: var(--gradient-elevated);
+  transform: translateX(2px);
+}
+
+.nav-item.active {
+  background: var(--gradient-primary);
+  color: white;
+  box-shadow: var(--shadow-md);
+}
+```
+
+#### Mobile Bottom Navigation
+```css
+.bottom-navigation {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 64px;
+  background: var(--bg-surface);
+  border-top: 1px solid var(--neutral-200);
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  z-index: 50;
+}
+
+.bottom-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 4px;
+  color: var(--neutral-600);
+  transition: all 200ms ease;
+}
+
+.bottom-nav-item.active {
+  color: var(--primary-600);
+  transform: scale(1.05);
+}
+
+.nav-icon {
+  font-size: 20px;
+  margin-bottom: 2px;
+}
+
+.nav-label {
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 1;
+}
+```
+
 ## Mobile-First Patterns
 
-### Navigation
-- **Bottom tab bar**: Primary navigation
+### Secondary Navigation
 - **Floating action button**: Key actions (New Chore)
 - **Back gesture**: iOS-style swipe from edge
 - **Header**: Minimal, essential info only
