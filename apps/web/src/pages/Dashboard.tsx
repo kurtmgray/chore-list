@@ -2,10 +2,11 @@ import { useState } from 'react';
 import { Link } from '@tanstack/react-router';
 import { trpc } from '../lib/trpc';
 import { useUser } from '../contexts/UserContext';
+import { useChoreActions } from '../hooks/useChoreActions';
 import { ChoreCard } from '../components/ChoreCard';
-import { ChoreForm } from '../components/ChoreForm';
 import { ReassignModal } from '../components/ReassignModal';
 import { ChoreDetailModal } from '../components/ChoreDetailModal';
+import { CreateChoreModal } from '../components/shared/CreateChoreModal';
 import { PageTransition, StaggeredList, FadeInUp } from '../components/PageTransition';
 import { Button } from '../components/ui/Button';
 
@@ -14,15 +15,17 @@ export function Dashboard() {
   
   // Modal states
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [detailChoreId, setDetailChoreId] = useState<number | null>(null);
-  
-  // Debug the modal state
   console.log('Dashboard render - isCreateModalOpen:', isCreateModalOpen);
-  const [reassignChore, setReassignChore] = useState<{
-    id: number;
-    title: string;
-    assignee?: { id: number; first_name: string; avatar: string; } | null;
-  } | null>(null);
+  
+  const {
+    detailChoreId,
+    reassignChore,
+    handleChoreClick,
+    handleReassignClick,
+    handleDetailReassign,
+    closeDetailModal,
+    closeReassignModal,
+  } = useChoreActions();
   
   // Dashboard data - minimal queries for critical info only
   const { data: users, isLoading: usersLoading } = trpc.users.getAll.useQuery();
@@ -53,35 +56,12 @@ export function Dashboard() {
     createChoreMutation.mutate(data);
   };
 
-  const handleReassignClick = (chore: any) => {
-    setReassignChore({
-      id: chore.id,
-      title: chore.title,
-      assignee: chore.first_name ? {
-        id: chore.assigned_to || 0,
-        first_name: chore.first_name,
-        avatar: chore.avatar || '👤'
-      } : null
-    });
-  };
-
-  const handleChoreClick = (chore: any) => {
-    setDetailChoreId(chore.id);
-  };
-
-  const handleDetailReassign = () => {
-    if (detailChoreId) {
-      // Find chore in dashboard data
-      const allDashboardChores = [
-        ...(dashboard?.overdue || []),
-        ...(dashboard?.upcoming || [])
-      ];
-      const chore = allDashboardChores.find(c => c.id === detailChoreId);
-      if (chore) {
-        handleReassignClick(chore);
-        setDetailChoreId(null);
-      }
-    }
+  const handleDetailReassignWrapper = () => {
+    const allDashboardChores = [
+      ...(dashboard?.overdue || []),
+      ...(dashboard?.upcoming || [])
+    ];
+    handleDetailReassign(allDashboardChores);
   };
 
 
@@ -283,61 +263,20 @@ export function Dashboard() {
         )}
 
 
-      {/* Enhanced Create Chore Modal */}
-      {isCreateModalOpen && (
-        <div 
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 fade-in"
-          style={{ 
-            backgroundColor: 'rgba(0, 0, 0, 0.6)',
-            backdropFilter: 'blur(8px)'
-          }}
-          onClick={() => setIsCreateModalOpen(false)}
-        >
-          <div 
-            className="glass-morphism rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto slide-up shadow-floating"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div 
-              className="flex items-center justify-between p-6 border-b"
-              style={{ borderBottomColor: 'var(--glass-border)' }}
-            >
-              <h2 
-                className="text-2xl font-bold"
-                style={{ color: 'var(--neutral-900)' }}
-              >
-                Create New Chore
-              </h2>
-              <button
-                onClick={() => setIsCreateModalOpen(false)}
-                className="p-2 rounded-lg button-hover"
-                style={{ 
-                  color: 'var(--neutral-400)',
-                  fontSize: '24px',
-                  fontWeight: 'bold'
-                }}
-              >
-                ×
-              </button>
-            </div>
-            
-            <div className="p-6">
-              <ChoreForm
-                onSubmit={handleCreateChore}
-                onCancel={() => setIsCreateModalOpen(false)}
-                isLoading={createChoreMutation.isPending}
-              />
-            </div>
-          </div>
-        </div>
-      )}
+      <CreateChoreModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onSubmit={handleCreateChore}
+        isLoading={createChoreMutation.isPending}
+      />
 
       {/* Chore Detail Modal */}
       {detailChoreId && (
         <ChoreDetailModal
           isOpen={true}
-          onClose={() => setDetailChoreId(null)}
+          onClose={closeDetailModal}
           choreId={detailChoreId}
-          onReassign={handleDetailReassign}
+          onReassign={handleDetailReassignWrapper}
         />
       )}
 
@@ -345,7 +284,7 @@ export function Dashboard() {
       {reassignChore && (
         <ReassignModal
           isOpen={true}
-          onClose={() => setReassignChore(null)}
+          onClose={closeReassignModal}
           choreId={reassignChore.id}
           choreTitle={reassignChore.title}
           currentAssignee={reassignChore.assignee}

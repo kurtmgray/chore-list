@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as ChoresRouteImport } from './routes/chores'
+import { Route as CalendarRouteImport } from './routes/calendar'
 import { Route as BalanceRouteImport } from './routes/balance'
 import { Route as IndexRouteImport } from './routes/index'
 
@@ -22,6 +23,11 @@ const SettingsRoute = SettingsRouteImport.update({
 const ChoresRoute = ChoresRouteImport.update({
   id: '/chores',
   path: '/chores',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CalendarRoute = CalendarRouteImport.update({
+  id: '/calendar',
+  path: '/calendar',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BalanceRoute = BalanceRouteImport.update({
@@ -38,12 +44,14 @@ const IndexRoute = IndexRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/balance': typeof BalanceRoute
+  '/calendar': typeof CalendarRoute
   '/chores': typeof ChoresRoute
   '/settings': typeof SettingsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/balance': typeof BalanceRoute
+  '/calendar': typeof CalendarRoute
   '/chores': typeof ChoresRoute
   '/settings': typeof SettingsRoute
 }
@@ -51,20 +59,22 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/balance': typeof BalanceRoute
+  '/calendar': typeof CalendarRoute
   '/chores': typeof ChoresRoute
   '/settings': typeof SettingsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/balance' | '/chores' | '/settings'
+  fullPaths: '/' | '/balance' | '/calendar' | '/chores' | '/settings'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/balance' | '/chores' | '/settings'
-  id: '__root__' | '/' | '/balance' | '/chores' | '/settings'
+  to: '/' | '/balance' | '/calendar' | '/chores' | '/settings'
+  id: '__root__' | '/' | '/balance' | '/calendar' | '/chores' | '/settings'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   BalanceRoute: typeof BalanceRoute
+  CalendarRoute: typeof CalendarRoute
   ChoresRoute: typeof ChoresRoute
   SettingsRoute: typeof SettingsRoute
 }
@@ -83,6 +93,13 @@ declare module '@tanstack/react-router' {
       path: '/chores'
       fullPath: '/chores'
       preLoaderRoute: typeof ChoresRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/calendar': {
+      id: '/calendar'
+      path: '/calendar'
+      fullPath: '/calendar'
+      preLoaderRoute: typeof CalendarRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/balance': {
@@ -105,6 +122,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   BalanceRoute: BalanceRoute,
+  CalendarRoute: CalendarRoute,
   ChoresRoute: ChoresRoute,
   SettingsRoute: SettingsRoute,
 }

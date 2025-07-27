@@ -2,6 +2,7 @@ import { createRouter, RouterProvider } from '@tanstack/react-router';
 import { TRPCProvider } from './providers/TRPCProvider';
 import { WorkspaceProvider } from './contexts/WorkspaceContext';
 import { UserProvider } from './contexts/UserContext';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { routeTree } from './routeTree.gen';
 import './App.css';
 
@@ -17,13 +18,15 @@ declare module '@tanstack/react-router' {
 
 function App() {
   return (
-    <TRPCProvider>
-      <WorkspaceProvider>
-        <UserProvider>
-          <RouterProvider router={router} />
-        </UserProvider>
-      </WorkspaceProvider>
-    </TRPCProvider>
+    <ErrorBoundary>
+      <TRPCProvider>
+        <WorkspaceProvider>
+          <UserProvider>
+            <RouterProvider router={router} />
+          </UserProvider>
+        </WorkspaceProvider>
+      </TRPCProvider>
+    </ErrorBoundary>
   );
 }
 

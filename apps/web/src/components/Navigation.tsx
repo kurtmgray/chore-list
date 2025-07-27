@@ -11,6 +11,7 @@ interface NavigationItem {
 
 const navigationItems: NavigationItem[] = [
   { icon: '🏠', label: 'Dashboard', path: '/' },
+  { icon: '📅', label: 'Calendar', path: '/calendar' },
   { icon: '📋', label: 'All Chores', path: '/chores' },
   { icon: '⚖️', label: 'Balance', path: '/balance' },
   { icon: '⚙️', label: 'Settings', path: '/settings' },

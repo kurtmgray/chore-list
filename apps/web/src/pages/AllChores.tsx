@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { trpc } from '../lib/trpc';
 import { useUser } from '../contexts/UserContext';
+import { useChoreActions } from '../hooks/useChoreActions';
+import { useChoreFiltering } from '../hooks/useChoreFiltering';
 import { ChoreCard } from '../components/ChoreCard';
-import { ChoreForm } from '../components/ChoreForm';
 import { ReassignModal } from '../components/ReassignModal';
 import { ChoreDetailModal } from '../components/ChoreDetailModal';
+import { CreateChoreModal } from '../components/shared/CreateChoreModal';
 import { PageTransition, StaggeredList, FadeInUp } from '../components/PageTransition';
 import { Button } from '../components/ui/Button';
 
@@ -13,21 +15,29 @@ export function AllChores() {
   
   // Modal states
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [detailChoreId, setDetailChoreId] = useState<number | null>(null);
-  const [reassignChore, setReassignChore] = useState<{
-    id: number;
-    title: string;
-    assignee?: { id: number; first_name: string; avatar: string; } | null;
-  } | null>(null);
   
-  // Filter, sort, and grouping states
-  const [choreFilter, setChoreFilter] = useState<{
-    assignedTo?: number;
-    status?: 'pending' | 'in_progress' | 'completed' | 'missed' | 'skipped';
-  }>({});
-  const [sortBy, setSortBy] = useState<'due_date' | 'priority' | 'category' | 'title'>('due_date');
-  const [groupBy, setGroupBy] = useState<'none' | 'category' | 'status' | 'assignee' | 'due_date'>('category');
-  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
+  const {
+    detailChoreId,
+    reassignChore,
+    handleChoreClick,
+    handleReassignClick,
+    handleDetailReassign,
+    closeDetailModal,
+    closeReassignModal,
+  } = useChoreActions();
+  
+  const {
+    choreFilter,
+    setChoreFilter,
+    sortBy,
+    setSortBy,
+    groupBy,
+    setGroupBy,
+    collapsedGroups,
+    setCollapsedGroups,
+    getGroupedChores,
+    toggleGroup,
+  } = useChoreFiltering();
   
   // Data queries
   const { data: users, isLoading: usersLoading } = trpc.users.getAll.useQuery();
@@ -58,147 +68,11 @@ export function AllChores() {
     createChoreMutation.mutate(data);
   };
 
-  const handleReassignClick = (chore: any) => {
-    setReassignChore({
-      id: chore.id,
-      title: chore.title,
-      assignee: chore.first_name ? {
-        id: chore.assigned_to || 0,
-        first_name: chore.first_name,
-        avatar: chore.avatar || '👤'
-      } : null
-    });
+  const handleDetailReassignWrapper = () => {
+    handleDetailReassign(allChores || []);
   };
 
-  const handleChoreClick = (chore: any) => {
-    setDetailChoreId(chore.id);
-  };
-
-  const handleDetailReassign = () => {
-    if (detailChoreId) {
-      const chore = allChores?.find(c => c.id === detailChoreId);
-      if (chore) {
-        handleReassignClick(chore);
-        setDetailChoreId(null);
-      }
-    }
-  };
-
-  // Group, filter and sort all chores
-  const getGroupedChores = () => {
-    if (!allChores) return { ungrouped: [], grouped: {} };
-    
-    let filtered = [...allChores];
-    
-    // Apply sorting within groups
-    const sortChores = (chores: any[]) => {
-      return chores.sort((a, b) => {
-        switch (sortBy) {
-          case 'due_date':
-            if (!a.next_due && !b.next_due) return 0;
-            if (!a.next_due) return 1;
-            if (!b.next_due) return -1;
-            return new Date(a.next_due).getTime() - new Date(b.next_due).getTime();
-          case 'priority':
-            return (b.priority_boost || 0) - (a.priority_boost || 0);
-          case 'category':
-            return (a.category_name || '').localeCompare(b.category_name || '');
-          case 'title':
-            return a.title.localeCompare(b.title);
-          default:
-            return 0;
-        }
-      });
-    };
-
-    if (groupBy === 'none') {
-      return { ungrouped: sortChores(filtered), grouped: {} };
-    }
-
-    // Group chores
-    const groups: Record<string, any[]> = {};
-    
-    filtered.forEach(chore => {
-      let groupKey = '';
-      let groupLabel = '';
-      
-      switch (groupBy) {
-        case 'category':
-          groupKey = chore.category_name || 'uncategorized';
-          groupLabel = chore.category_name || 'Uncategorized';
-          break;
-        case 'status':
-          groupKey = chore.status || 'pending';
-          groupLabel = (chore.status || 'pending').replace('_', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase());
-          break;
-        case 'assignee':
-          groupKey = chore.first_name || 'unassigned';
-          groupLabel = chore.first_name || 'Unassigned';
-          break;
-        case 'due_date':
-          if (!chore.next_due) {
-            groupKey = 'no_due_date';
-            groupLabel = 'No Due Date';
-          } else {
-            const dueDate = new Date(chore.next_due);
-            const today = new Date();
-            const diffDays = Math.ceil((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-            
-            if (diffDays < 0) {
-              groupKey = 'overdue';
-              groupLabel = 'Overdue';
-            } else if (diffDays === 0) {
-              groupKey = 'today';
-              groupLabel = 'Due Today';
-            } else if (diffDays === 1) {
-              groupKey = 'tomorrow';
-              groupLabel = 'Due Tomorrow';
-            } else if (diffDays <= 7) {
-              groupKey = 'this_week';
-              groupLabel = 'This Week';
-            } else {
-              groupKey = 'later';
-              groupLabel = 'Later';
-            }
-          }
-          break;
-      }
-      
-      if (!groups[groupKey]) {
-        groups[groupKey] = [];
-      }
-      groups[groupKey].push({ ...chore, groupLabel });
-    });
-
-    // Sort each group and the groups themselves
-    const sortedGroups: Record<string, any[]> = {};
-    Object.keys(groups)
-      .sort((a, b) => {
-        // Custom group ordering
-        if (groupBy === 'due_date') {
-          const order = ['overdue', 'today', 'tomorrow', 'this_week', 'later', 'no_due_date'];
-          return order.indexOf(a) - order.indexOf(b);
-        }
-        return a.localeCompare(b);
-      })
-      .forEach(key => {
-        sortedGroups[key] = sortChores(groups[key]);
-      });
-
-    return { ungrouped: [], grouped: sortedGroups };
-  };
-
-  const toggleGroup = (groupKey: string) => {
-    const newCollapsed = new Set(collapsedGroups);
-    if (newCollapsed.has(groupKey)) {
-      newCollapsed.delete(groupKey);
-    } else {
-      newCollapsed.add(groupKey);
-    }
-    setCollapsedGroups(newCollapsed);
-  };
-
-  const { ungrouped, grouped } = getGroupedChores();
+  const { ungrouped, grouped } = getGroupedChores(allChores);
   const totalChores = ungrouped.length + Object.values(grouped).flat().length;
 
   return (
@@ -493,61 +367,20 @@ export function AllChores() {
           </div>
         </FadeInUp>
 
-        {/* Create Chore Modal */}
-        {isCreateModalOpen && (
-          <div 
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 fade-in"
-            style={{ 
-              backgroundColor: 'rgba(0, 0, 0, 0.6)',
-              backdropFilter: 'blur(8px)'
-            }}
-            onClick={() => setIsCreateModalOpen(false)}
-          >
-            <div 
-              className="glass-morphism rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto slide-up shadow-floating"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div 
-                className="flex items-center justify-between p-6 border-b"
-                style={{ borderBottomColor: 'var(--glass-border)' }}
-              >
-                <h2 
-                  className="text-2xl font-bold"
-                  style={{ color: 'var(--neutral-900)' }}
-                >
-                  Create New Chore
-                </h2>
-                <button
-                  onClick={() => setIsCreateModalOpen(false)}
-                  className="p-2 rounded-lg button-hover"
-                  style={{ 
-                    color: 'var(--neutral-400)',
-                    fontSize: '24px',
-                    fontWeight: 'bold'
-                  }}
-                >
-                  ×
-                </button>
-              </div>
-              
-              <div className="p-6">
-                <ChoreForm
-                  onSubmit={handleCreateChore}
-                  onCancel={() => setIsCreateModalOpen(false)}
-                  isLoading={createChoreMutation.isPending}
-                />
-              </div>
-            </div>
-          </div>
-        )}
+        <CreateChoreModal
+          isOpen={isCreateModalOpen}
+          onClose={() => setIsCreateModalOpen(false)}
+          onSubmit={handleCreateChore}
+          isLoading={createChoreMutation.isPending}
+        />
 
         {/* Chore Detail Modal */}
         {detailChoreId && (
           <ChoreDetailModal
             isOpen={true}
-            onClose={() => setDetailChoreId(null)}
+            onClose={closeDetailModal}
             choreId={detailChoreId}
-            onReassign={handleDetailReassign}
+            onReassign={handleDetailReassignWrapper}
           />
         )}
 
@@ -555,7 +388,7 @@ export function AllChores() {
         {reassignChore && (
           <ReassignModal
             isOpen={true}
-            onClose={() => setReassignChore(null)}
+            onClose={closeReassignModal}
             choreId={reassignChore.id}
             choreTitle={reassignChore.title}
             currentAssignee={reassignChore.assignee}

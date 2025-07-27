@@ -1,4 +1,4 @@
-import { trpc } from '../lib/trpc';
+import { useOptimisticChoreUpdates } from '../hooks/useOptimisticChoreUpdates';
 
 interface Chore {
   id: number;
@@ -21,56 +21,9 @@ interface ChoreCardProps {
 }
 
 export function ChoreCard({ chore, onComplete, onReassign, onClick }: ChoreCardProps) {
-  const utils = trpc.useUtils();
-
-  const completeMutation = trpc.chores.complete.useMutation({
-    onMutate: async () => {
-      // Cancel any outgoing refetches so they don't overwrite our optimistic update
-      await utils.chores.getDashboard.cancel();
-      await utils.chores.getAll.cancel();
-
-      // Snapshot the previous value
-      const previousDashboard = utils.chores.getDashboard.getData();
-      const previousAllChores = utils.chores.getAll.getData();
-
-      // Optimistically update dashboard - remove from overdue/upcoming
-      if (previousDashboard) {
-        utils.chores.getDashboard.setData(undefined, {
-          ...previousDashboard,
-          overdue: previousDashboard.overdue.filter(c => c.id !== chore.id),
-          upcoming: previousDashboard.upcoming.filter(c => c.id !== chore.id),
-        });
-      }
-
-      // Optimistically update all chores if they exist
-      if (previousAllChores) {
-        const updatedChores = previousAllChores.map(c => 
-          c.id === chore.id 
-            ? { ...c, status: 'completed' as const, last_completed: new Date().toISOString() }
-            : c
-        );
-        utils.chores.getAll.setData({}, updatedChores);
-      }
-
-      // Return a context object with the snapshotted value
-      return { previousDashboard, previousAllChores };
-    },
-    onError: (_err, _variables, context) => {
-      // If the mutation fails, use the context returned from onMutate to roll back
-      if (context?.previousDashboard) {
-        utils.chores.getDashboard.setData(undefined, context.previousDashboard);
-      }
-      if (context?.previousAllChores) {
-        utils.chores.getAll.setData({}, context.previousAllChores);
-      }
-    },
-    onSettled: () => {
-      // Always refetch after error or success to ensure we have up-to-date data
-      utils.chores.getDashboard.invalidate();
-      utils.chores.getAll.invalidate();
-      onComplete?.();
-    },
-  });
+  // Use shared optimistic updates hook
+  const { createOptimisticCompleteMutation } = useOptimisticChoreUpdates();
+  const completeMutation = createOptimisticCompleteMutation(chore.id, onComplete);
 
   const handleComplete = () => {
     completeMutation.mutate({ id: chore.id });
