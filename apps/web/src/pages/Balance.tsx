@@ -1,5 +1,6 @@
 import { trpc } from '../lib/trpc';
 import { PageTransition, FadeInUp } from '../components/PageTransition';
+import { PageHeader } from '../components/PageHeader';
 
 export function Balance() {
   const { data: dashboard, isLoading: dashboardLoading } = trpc.chores.getDashboard.useQuery();
@@ -19,22 +20,12 @@ export function Balance() {
     <PageTransition>
       <div className="space-y-6">
         {/* Page Header */}
-        <FadeInUp delay={0}>
-          <div>
-            <h1 
-              className="text-2xl lg:text-3xl font-bold tracking-tight mb-2"
-              style={{ color: 'var(--neutral-900)' }}
-            >
-              Workload Balance
-            </h1>
-            <p 
-              className="text-sm lg:text-base"
-              style={{ color: 'var(--neutral-600)' }}
-            >
-              Track fairness and completion patterns across your household
-            </p>
-          </div>
-        </FadeInUp>
+        <PageHeader
+          title="Workload Balance"
+          subtitle="Track fairness and completion patterns across your household"
+          variant="standard"
+          delay={0}
+        />
 
         {/* Workload Balance Dashboard */}
         {dashboard?.workloadBalance && dashboard.workloadBalance.length > 0 && (

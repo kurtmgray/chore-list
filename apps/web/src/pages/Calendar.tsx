@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { PageTransition, FadeInUp } from '../components/PageTransition';
+import { PageHeader } from '../components/PageHeader';
 import { useCalendarData } from '../hooks/useCalendarData';
 import { useCalendarFiltering } from '../hooks/useCalendarFiltering';
 import { CalendarGrid, CalendarFilters, DayDetailModal } from '../components/Calendar';
@@ -57,24 +58,12 @@ export function Calendar() {
     <PageTransition>
       <div className="space-y-6">
         {/* Page Header */}
-        <FadeInUp delay={0}>
-          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-            <div>
-              <h1 
-                className="text-2xl lg:text-3xl font-bold tracking-tight mb-2"
-                style={{ color: 'var(--neutral-900)' }}
-              >
-                Calendar View
-              </h1>
-              <p 
-                className="text-sm lg:text-base"
-                style={{ color: 'var(--neutral-600)' }}
-              >
-                Rolling 4-week view • {dateRangeText}
-              </p>
-            </div>
-          </div>
-        </FadeInUp>
+        <PageHeader
+          title="Calendar View"
+          subtitle={`Rolling 4-week view • ${dateRangeText}`}
+          variant="standard"
+          delay={0}
+        />
 
         {/* Calendar Filters */}
         <FadeInUp delay={100}>

@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { trpc } from '../lib/trpc';
-import { useUser } from '../contexts/UserContext';
 import { useChoreActions } from '../hooks/useChoreActions';
 import { useChoreFiltering } from '../hooks/useChoreFiltering';
 import { ChoreCard } from '../components/ChoreCard';
@@ -9,10 +8,11 @@ import { ReassignModal } from '../components/ReassignModal';
 import { ChoreDetailModal } from '../components/ChoreDetailModal';
 import { CreateChoreModal } from '../components/shared/CreateChoreModal';
 import { PageTransition, StaggeredList, FadeInUp } from '../components/PageTransition';
+import { PageHeader } from '../components/PageHeader';
 import { Button } from '../components/ui/Button';
 
 export function AllChores() {
-  const { currentUser } = useUser();
+  // const { currentUser } = useUser(); // Not needed for AllChores page
   
   // Modal states
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -65,8 +65,9 @@ export function AllChores() {
     );
   }
 
-  const handleCreateChore = (data: any) => {
-    createChoreMutation.mutate(data);
+  const handleCreateChore = (data: unknown) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    createChoreMutation.mutate(data as any); // Type assertion needed for trpc mutation
   };
 
   const handleDetailReassignWrapper = () => {
@@ -80,23 +81,12 @@ export function AllChores() {
     <PageTransition>
       <div className="space-y-6">
         {/* Page Header */}
-        <FadeInUp delay={0}>
-          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-            <div>
-              <h1 
-                className="text-2xl lg:text-3xl font-bold tracking-tight mb-2"
-                style={{ color: 'var(--neutral-900)' }}
-              >
-                All Chores
-              </h1>
-              <p 
-                className="text-sm lg:text-base"
-                style={{ color: 'var(--neutral-600)' }}
-              >
-                Manage and organize all household tasks
-              </p>
-            </div>
-            
+        <PageHeader
+          title="All Chores"
+          subtitle="Manage and organize all household tasks"
+          variant="standard"
+          delay={0}
+          actionButton={
             <Button
               onClick={() => setIsCreateModalOpen(true)}
               variant="primary"
@@ -105,8 +95,8 @@ export function AllChores() {
               <span className="mr-2">+</span>
               New Chore
             </Button>
-          </div>
-        </FadeInUp>
+          }
+        />
 
         {/* Filter and Sort Controls */}
         <FadeInUp delay={100}>
@@ -203,7 +193,7 @@ export function AllChores() {
               </StaggeredList>
             ) : (
               <div className="space-y-4">
-                {Object.entries(grouped).map(([groupKey, groupChores], groupIndex) => {
+                {Object.entries(grouped).map(([groupKey, groupChores]) => {
                   const isCollapsed = collapsedGroups.has(groupKey);
                   const groupLabel = groupChores[0]?.groupLabel || groupKey;
                   

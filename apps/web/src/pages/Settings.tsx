@@ -2,6 +2,7 @@ import { trpc } from '../lib/trpc';
 import { PageTransition, FadeInUp } from '../components/PageTransition';
 import { Card, CardHeader, CardBody } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
+import { PageHeader } from '../components/PageHeader';
 
 export function Settings() {
   const { data: users, isLoading: usersLoading } = trpc.users.getAll.useQuery();
@@ -24,23 +25,12 @@ export function Settings() {
   return (
     <PageTransition>
       <div className="space-y-6">
-        {/* Page Header */}
-        <FadeInUp delay={0}>
-          <div>
-            <h1 
-              className="text-2xl lg:text-3xl font-bold tracking-tight mb-2"
-              style={{ color: 'var(--neutral-900)' }}
-            >
-              Settings
-            </h1>
-            <p 
-              className="text-sm lg:text-base"
-              style={{ color: 'var(--neutral-600)' }}
-            >
-              Manage your household, categories, and preferences
-            </p>
-          </div>
-        </FadeInUp>
+        <PageHeader
+          title="Settings"
+          subtitle="Manage your household, categories, and preferences"
+          variant="standard"
+          delay={0}
+        />
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Household Members */}

@@ -9,6 +9,7 @@ import { ChoreDetailModal } from '../components/ChoreDetailModal';
 import { CreateChoreModal } from '../components/shared/CreateChoreModal';
 import { PageTransition, StaggeredList, FadeInUp } from '../components/PageTransition';
 import { Button } from '../components/ui/Button';
+import { PageHeader } from '../components/PageHeader';
 
 export function Dashboard() {
   const { currentUser } = useUser();
@@ -69,91 +70,42 @@ export function Dashboard() {
     <PageTransition>
       <div className="space-y-4 lg:space-y-6">
         {/* Enhanced header with gradient and floating action */}
-        <FadeInUp delay={0}>
-          <div 
-            className="gradient-surface rounded-xl p-4 lg:p-5 shadow-elevated card-hover"
-          >
-        {/* Header row */}
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex-1 min-w-0">
-            <h1 
-              className="text-xl lg:text-2xl font-semibold tracking-tight mb-1"
-              style={{ color: 'var(--neutral-900)' }}
+        <PageHeader
+          title={`Hello, ${currentUser?.first_name} ${currentUser?.avatar}`}
+          subtitle={new Date().toLocaleDateString('en-US', { 
+            weekday: 'long', 
+            month: 'long', 
+            day: 'numeric' 
+          })}
+          variant="enhanced"
+          actionButton={
+            <Button
+              onClick={() => setIsCreateModalOpen(true)}
+              variant="primary"
+              className="shadow-floating pulse-glow"
             >
-              Hello, {currentUser?.first_name} {currentUser?.avatar}
-            </h1>
-            <p 
-              className="text-sm lg:text-base"
-              style={{ color: 'var(--neutral-600)' }}
-            >
-              {new Date().toLocaleDateString('en-US', { 
-                weekday: 'long', 
-                month: 'long', 
-                day: 'numeric' 
-              })}
-            </p>
-          </div>
-          
-          {/* New Chore Button */}
-          <Button
-            onClick={() => setIsCreateModalOpen(true)}
-            variant="primary"
-            className="shadow-floating pulse-glow"
-          >
-            <span className="mr-2">+</span>
-            New Chore
-          </Button>
-        </div>
-
-        {/* Inline stats - horizontal scroll on mobile */}
-        <div className="flex gap-4 lg:gap-6 overflow-x-auto pb-1">
-          <div className="flex-shrink-0">
-            <div 
-              className="text-sm font-medium mb-1"
-              style={{ color: 'var(--neutral-600)' }}
-            >
-              Overdue
-            </div>
-            <div 
-              className="text-xl lg:text-2xl font-semibold"
-              style={{ color: 'var(--error-red)' }}
-            >
-              {dashboard?.overdue.length || 0}
-            </div>
-          </div>
-          
-          <div className="flex-shrink-0">
-            <div 
-              className="text-sm font-medium mb-1"
-              style={{ color: 'var(--neutral-600)' }}
-            >
-              Due Soon
-            </div>
-            <div 
-              className="text-xl lg:text-2xl font-semibold"
-              style={{ color: 'var(--warning-amber)' }}
-            >
-              {dashboard?.upcoming.length || 0}
-            </div>
-          </div>
-          
-          <div className="flex-shrink-0">
-            <div 
-              className="text-sm font-medium mb-1"
-              style={{ color: 'var(--neutral-600)' }}
-            >
-              Completed Today
-            </div>
-            <div 
-              className="text-xl lg:text-2xl font-semibold"
-              style={{ color: 'var(--success-green)' }}
-            >
-              {dashboard?.recentCompletions.length || 0}
-            </div>
-          </div>
-        </div>
-          </div>
-        </FadeInUp>
+              <span className="mr-2">+</span>
+              New Chore
+            </Button>
+          }
+          stats={[
+            {
+              label: 'Overdue',
+              value: dashboard?.overdue.length || 0,
+              color: 'error'
+            },
+            {
+              label: 'Due Soon',
+              value: dashboard?.upcoming.length || 0,
+              color: 'warning'
+            },
+            {
+              label: 'Completed Today',
+              value: dashboard?.recentCompletions.length || 0,
+              color: 'success'
+            }
+          ]}
+        />
 
         {/* Overdue Chores */}
         {dashboard?.overdue && dashboard.overdue.length > 0 && (
