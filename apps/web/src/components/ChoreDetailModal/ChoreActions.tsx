@@ -30,11 +30,11 @@ export function ChoreActions({
       }}
     >
       {isEditing ? (
-        <div className="flex flex-col sm:flex-row gap-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
           <button
             onClick={onSaveEdit}
             disabled={isUpdating}
-            className="flex-1 px-6 py-4 rounded-xl font-semibold text-white transition-all duration-200 disabled:opacity-50"
+            className="flex-1 px-4 py-3 sm:px-6 sm:py-4 rounded-xl font-semibold text-white transition-all duration-200 disabled:opacity-50 min-h-[48px]"
             style={{
               background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
               boxShadow: '0 4px 12px rgba(16, 185, 129, 0.4), 0 2px 4px rgba(0, 0, 0, 0.1)',
@@ -56,7 +56,7 @@ export function ChoreActions({
           <button
             onClick={onCancelEdit}
             disabled={isUpdating}
-            className="flex-1 px-6 py-4 rounded-xl font-semibold transition-all duration-200 disabled:opacity-50"
+            className="flex-1 px-4 py-3 sm:px-6 sm:py-4 rounded-xl font-semibold transition-all duration-200 disabled:opacity-50 min-h-[48px]"
             style={{
               background: '#ffffff',
               color: '#374151',
@@ -68,12 +68,12 @@ export function ChoreActions({
           </button>
         </div>
       ) : (
-        <div className="flex flex-col sm:flex-row gap-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
           {choreWithCategory.status !== 'completed' && (
             <button
               onClick={onComplete}
               disabled={isCompleting}
-              className="flex-1 px-6 py-4 rounded-xl font-semibold text-white transition-all duration-200 disabled:opacity-50"
+              className="flex-1 px-4 py-3 sm:px-6 sm:py-4 rounded-xl font-semibold text-white transition-all duration-200 disabled:opacity-50 min-h-[48px]"
               style={{
                 background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
                 boxShadow: '0 4px 12px rgba(16, 185, 129, 0.4), 0 2px 4px rgba(0, 0, 0, 0.1)',
@@ -97,7 +97,7 @@ export function ChoreActions({
           <button
             onClick={onReassign}
             disabled={isCompleting}
-            className="flex-1 px-6 py-4 rounded-xl font-semibold transition-all duration-200 disabled:opacity-50"
+            className="flex-1 px-4 py-3 sm:px-6 sm:py-4 rounded-xl font-semibold transition-all duration-200 disabled:opacity-50 min-h-[48px]"
             style={{
               background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
               color: 'white',
@@ -113,7 +113,7 @@ export function ChoreActions({
           <button
             onClick={onStartEdit}
             disabled={isCompleting}
-            className="flex-1 px-6 py-4 rounded-xl font-semibold transition-all duration-200 disabled:opacity-50"
+            className="flex-1 px-4 py-3 sm:px-6 sm:py-4 rounded-xl font-semibold transition-all duration-200 disabled:opacity-50 min-h-[48px]"
             style={{
               background: '#ffffff',
               color: '#374151',

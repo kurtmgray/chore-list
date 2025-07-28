@@ -22,7 +22,10 @@ interface DesktopSidebarProps {
   onToggleCollapse: () => void;
 }
 
-export function DesktopSidebar({ isCollapsed, onToggleCollapse }: DesktopSidebarProps) {
+export function DesktopSidebar({
+  isCollapsed,
+  onToggleCollapse,
+}: DesktopSidebarProps) {
   const location = useLocation();
 
   return (
@@ -37,10 +40,13 @@ export function DesktopSidebar({ isCollapsed, onToggleCollapse }: DesktopSidebar
       }}
     >
       {/* Header */}
-      <div className="p-4 border-b" style={{ borderBottomColor: 'var(--neutral-200)' }}>
+      <div
+        className="p-4 border-b"
+        style={{ borderBottomColor: 'var(--neutral-200)' }}
+      >
         <div className="flex items-center justify-between mb-4">
           {!isCollapsed && (
-            <h1 
+            <h1
               className="text-lg font-bold"
               style={{ color: 'var(--neutral-900)' }}
             >
@@ -55,7 +61,7 @@ export function DesktopSidebar({ isCollapsed, onToggleCollapse }: DesktopSidebar
             {isCollapsed ? '→' : '←'}
           </button>
         </div>
-        
+
         {/* User Switcher in Sidebar */}
         {!isCollapsed && (
           <div className="mb-2">
@@ -68,7 +74,7 @@ export function DesktopSidebar({ isCollapsed, onToggleCollapse }: DesktopSidebar
       <div className="p-2 space-y-1">
         {navigationItems.map((item) => {
           const isActive = location.pathname === item.path;
-          
+
           return (
             <Link
               key={item.path}
@@ -78,10 +84,13 @@ export function DesktopSidebar({ isCollapsed, onToggleCollapse }: DesktopSidebar
                 ${isCollapsed ? 'justify-center' : ''}
               `}
               style={{
-                backgroundColor: isActive ? 'var(--primary-600)' : 'transparent',
+                backgroundColor: isActive
+                  ? 'var(--primary-600)'
+                  : 'transparent',
                 color: isActive ? 'white' : 'var(--neutral-700)',
                 boxShadow: isActive ? 'var(--shadow-md)' : 'none',
-                transform: isActive && !isCollapsed ? 'translateX(2px)' : 'none',
+                transform:
+                  isActive && !isCollapsed ? 'translateX(2px)' : 'none',
               }}
             >
               <span className="text-xl flex-shrink-0">{item.icon}</span>
@@ -89,10 +98,12 @@ export function DesktopSidebar({ isCollapsed, onToggleCollapse }: DesktopSidebar
                 <span className="font-medium text-sm">{item.label}</span>
               )}
               {!isCollapsed && item.badge && (
-                <span 
+                <span
                   className="ml-auto px-2 py-0.5 rounded-full text-xs font-medium"
                   style={{
-                    backgroundColor: isActive ? 'rgba(255,255,255,0.2)' : 'var(--error-red)',
+                    backgroundColor: isActive
+                      ? 'rgba(255,255,255,0.2)'
+                      : 'var(--error-red)',
                     color: isActive ? 'white' : 'white',
                   }}
                 >
@@ -121,7 +132,7 @@ export function MobileBottomNavigation() {
     >
       {navigationItems.map((item) => {
         const isActive = location.pathname === item.path;
-        
+
         return (
           <Link
             key={item.path}
@@ -133,7 +144,7 @@ export function MobileBottomNavigation() {
             }}
           >
             <span className="text-lg mb-0.5">{item.icon}</span>
-            <span 
+            <span
               className="text-xs font-medium leading-none"
               style={{
                 color: isActive ? 'var(--primary-600)' : 'var(--neutral-600)',
@@ -169,7 +180,10 @@ export function NavigationProvider({ children }: NavigationProviderProps) {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: 'var(--bg-primary)' }}>
+    <div
+      // className="min-h-screen"
+      style={{ backgroundColor: 'var(--bg-primary)' }}
+    >
       {/* Mobile Header */}
       <header
         className="md:hidden glass-morphism sticky top-0 z-40 fade-in"
@@ -204,14 +218,14 @@ export function NavigationProvider({ children }: NavigationProviderProps) {
       </div>
 
       {/* Main Content */}
-      <div 
+      <div
         className={`transition-all duration-300 ease-out pb-16 md:pb-0 ${
           isSidebarCollapsed ? 'md:ml-16' : 'md:ml-60'
         }`}
       >
-        <div className="max-w-7xl mx-auto px-4 py-6">
-          {children}
-        </div>
+        {/* <div className="max-w-7xl mx-auto px-4 py-6"> */}
+        {children}
+        {/* </div> */}
       </div>
 
       {/* Mobile Bottom Navigation */}

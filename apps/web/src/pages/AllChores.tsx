@@ -4,6 +4,7 @@ import { useUser } from '../contexts/UserContext';
 import { useChoreActions } from '../hooks/useChoreActions';
 import { useChoreFiltering } from '../hooks/useChoreFiltering';
 import { ChoreCard } from '../components/ChoreCard';
+import { ChoreFiltersControls } from '../components/ChoreFiltersControls';
 import { ReassignModal } from '../components/ReassignModal';
 import { ChoreDetailModal } from '../components/ChoreDetailModal';
 import { CreateChoreModal } from '../components/shared/CreateChoreModal';
@@ -109,148 +110,49 @@ export function AllChores() {
 
         {/* Filter and Sort Controls */}
         <FadeInUp delay={100}>
-          <div 
-            className="gradient-surface rounded-xl p-4 lg:p-5 shadow-elevated"
-          >
-            <div className="flex flex-col lg:flex-row gap-4">
-              <div className="flex flex-wrap gap-3">
-                <select
-                  value={choreFilter.assignedTo || ''}
-                  onChange={(e) => setChoreFilter(prev => ({
-                    ...prev,
-                    assignedTo: e.target.value ? Number(e.target.value) : undefined
-                  }))}
-                  className="px-3 py-2 rounded-lg text-sm border transition-all duration-200"
-                  style={{
-                    backgroundColor: 'var(--bg-surface)',
-                    borderColor: 'var(--neutral-200)',
-                    color: 'var(--neutral-900)'
-                  }}
-                >
-                  <option value="">All Users</option>
-                  {users?.map(user => (
-                    <option key={user.id} value={user.id}>
-                      {user.avatar} {user.first_name}
-                    </option>
-                  ))}
-                  <option value="unassigned">Unassigned</option>
-                </select>
-                
-                <select
-                  value={choreFilter.status || ''}
-                  onChange={(e) => setChoreFilter(prev => ({
-                    ...prev,
-                    status: e.target.value as any || undefined
-                  }))}
-                  className="px-3 py-2 rounded-lg text-sm border transition-all duration-200"
-                  style={{
-                    backgroundColor: 'var(--bg-surface)',
-                    borderColor: 'var(--neutral-200)',
-                    color: 'var(--neutral-900)'
-                  }}
-                >
-                  <option value="">All Status</option>
-                  <option value="pending">Pending</option>
-                  <option value="in_progress">In Progress</option>
-                  <option value="completed">Completed</option>
-                  <option value="missed">Missed</option>
-                  <option value="skipped">Skipped</option>
-                </select>
-              </div>
-              
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 lg:ml-auto">
-                <div className="flex items-center gap-3">
-                  <span 
-                    className="text-sm font-medium whitespace-nowrap"
-                    style={{ color: 'var(--neutral-600)' }}
-                  >
-                    Group by:
-                  </span>
-                  <select
-                    value={groupBy}
-                    onChange={(e) => setGroupBy(e.target.value as any)}
-                    className="px-3 py-2 rounded-lg text-sm border transition-all duration-200"
-                    style={{
-                      backgroundColor: 'var(--bg-surface)',
-                      borderColor: 'var(--neutral-200)',
-                      color: 'var(--neutral-900)'
-                    }}
-                  >
-                    <option value="category">Category</option>
-                    <option value="status">Status</option>
-                    <option value="assignee">Assignee</option>
-                    <option value="due_date">Due Date</option>
-                    <option value="none">None</option>
-                  </select>
-                </div>
-                
-                <div className="flex items-center gap-3">
-                  <span 
-                    className="text-sm font-medium whitespace-nowrap"
-                    style={{ color: 'var(--neutral-600)' }}
-                  >
-                    Sort by:
-                  </span>
-                  <select
-                    value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value as any)}
-                    className="px-3 py-2 rounded-lg text-sm border transition-all duration-200"
-                    style={{
-                      backgroundColor: 'var(--bg-surface)',
-                      borderColor: 'var(--neutral-200)',
-                      color: 'var(--neutral-900)'
-                    }}
-                  >
-                    <option value="due_date">Due Date</option>
-                    <option value="priority">Priority</option>
-                    <option value="category">Category</option>
-                    <option value="title">Title</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-
-            {/* Results Summary */}
-            <div className="mt-4 pt-4 border-t" style={{ borderTopColor: 'var(--neutral-200)' }}>
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                <p 
-                  className="text-sm"
-                  style={{ color: 'var(--neutral-600)' }}
-                >
-                  Showing {totalChores} chore{totalChores !== 1 ? 's' : ''}
-                  {choreFilter.assignedTo && ` assigned to ${users?.find(u => u.id === choreFilter.assignedTo)?.first_name}`}
-                  {choreFilter.status && ` with status "${choreFilter.status}"`}
-                  {groupBy !== 'none' && ` grouped by ${groupBy.replace('_', ' ')}`}
-                </p>
-                
-                {Object.keys(grouped).length > 0 && (
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => setCollapsedGroups(new Set())}
-                      className="text-xs px-2 py-1 rounded-md button-hover"
-                      style={{ 
-                        backgroundColor: 'var(--gradient-elevated)',
-                        color: 'var(--neutral-600)'
-                      }}
-                    >
-                      Expand All
-                    </button>
-                    <button
-                      onClick={() => setCollapsedGroups(new Set(Object.keys(grouped)))}
-                      className="text-xs px-2 py-1 rounded-md button-hover"
-                      style={{ 
-                        backgroundColor: 'var(--gradient-elevated)',
-                        color: 'var(--neutral-600)'
-                      }}
-                    >
-                      Collapse All
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
+          <ChoreFiltersControls
+            choreFilter={choreFilter}
+            setChoreFilter={setChoreFilter}
+            sortBy={sortBy}
+            setSortBy={setSortBy}
+            groupBy={groupBy}
+            setGroupBy={setGroupBy}
+            users={users}
+            categories={categories}
+            totalChores={totalChores}
+            filteredChores={totalChores}
+            hasActiveFilters={!!(choreFilter.assignedTo || choreFilter.status)}
+            onClearFilters={() => setChoreFilter({})}
+          />
         </FadeInUp>
+
+        {/* Group Controls */}
+        {Object.keys(grouped).length > 0 && (
+          <FadeInUp delay={150}>
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setCollapsedGroups(new Set())}
+                className="text-xs px-3 py-2 rounded-lg button-hover"
+                style={{ 
+                  backgroundColor: 'var(--gradient-elevated)',
+                  color: 'var(--neutral-600)'
+                }}
+              >
+                Expand All
+              </button>
+              <button
+                onClick={() => setCollapsedGroups(new Set(Object.keys(grouped)))}
+                className="text-xs px-3 py-2 rounded-lg button-hover"
+                style={{ 
+                  backgroundColor: 'var(--gradient-elevated)',
+                  color: 'var(--neutral-600)'
+                }}
+              >
+                Collapse All
+              </button>
+            </div>
+          </FadeInUp>
+        )}
 
         {/* Chore List */}
         <FadeInUp delay={200}>

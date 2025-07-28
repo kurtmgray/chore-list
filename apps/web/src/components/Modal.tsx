@@ -40,54 +40,55 @@ export function Modal({
   if (!isOpen) return null;
 
   const sizeClasses = {
-    sm: 'max-w-md',
-    md: 'max-w-lg',
-    lg: 'max-w-2xl',
-    xl: 'max-w-4xl',
+    sm: 'w-full max-w-sm mx-3 sm:max-w-md',
+    md: 'w-full max-w-md mx-3 sm:max-w-lg',
+    lg: 'w-full max-w-lg mx-3 sm:max-w-xl lg:max-w-2xl',
+    xl: 'w-full max-w-xl mx-3 sm:max-w-2xl lg:max-w-4xl',
   };
 
   return (
-    <div className="fixed inset-0 z-[9999] overflow-y-auto">
+    <div className="fixed inset-0 z-50 overflow-y-auto">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-red-500 bg-opacity-80 transition-opacity"
+        className="fixed inset-0 bg-black bg-opacity-50 transition-opacity backdrop-blur-sm"
         onClick={onClose}
       />
 
       {/* Modal */}
-      <div className="flex min-h-full items-center justify-center p-4">
+      <div className="flex min-h-full items-center justify-center p-2 sm:p-4">
         <div
           className={`
-            relative w-full ${sizeClasses[size]} bg-white rounded-lg shadow-xl 
-            transform transition-all max-h-[90vh] overflow-hidden
+            relative w-full ${sizeClasses[size]} transform transition-all max-h-[90vh] overflow-hidden
+            gradient-surface rounded-xl shadow-floating
           `}
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b">
-            <h2 className="text-xl font-semibold text-gray-900">{title}</h2>
+          <div 
+            className="flex items-center justify-between p-4 sm:p-6 border-b"
+            style={{ borderBottomColor: 'var(--neutral-200)' }}
+          >
+            <h2 
+              className="text-lg sm:text-xl font-semibold pr-2"
+              style={{ color: 'var(--neutral-900)' }}
+            >
+              {title}
+            </h2>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
+              className="p-3 rounded-lg transition-colors duration-200 button-hover min-w-[44px] min-h-[44px] flex items-center justify-center"
+              style={{ 
+                color: 'var(--neutral-400)',
+                fontSize: '20px',
+                fontWeight: 'bold'
+              }}
             >
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
+              ×
             </button>
           </div>
 
           {/* Content */}
-          <div className="p-6 overflow-y-auto max-h-[calc(90vh-8rem)]">
+          <div className="p-4 sm:p-6 overflow-y-auto max-h-[calc(90vh-8rem)]">
             {children}
           </div>
         </div>

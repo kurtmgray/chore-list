@@ -32,7 +32,7 @@ export function CalendarFilters({
           <select
             value={selectedFrequency}
             onChange={(e) => {
-              const value = e.target.value === 'all' ? 'all' : e.target.value;
+              const value = e.target.value === 'all' ? 'all' : parseInt(e.target.value);
               onFrequencyChange(value);
             }}
             className="px-3 py-2 rounded-lg text-sm border transition-all duration-200 min-w-[120px]"

@@ -44,13 +44,19 @@ export function DynamicPropertyForm({
     const rules = property.validation_rules || {};
 
     const baseInputClasses = `
-      mt-1 block w-full rounded-md border px-3 py-2 text-sm
-      focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+      w-full rounded-lg border px-3 py-2 text-sm transition-all duration-200
+      focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[44px]
       ${hasError 
-        ? 'border-red-300 bg-red-50' 
-        : 'border-gray-300 bg-white'
+        ? 'border-red-300' 
+        : ''
       }
     `;
+
+    const baseInputStyles = {
+      backgroundColor: hasError ? 'var(--error-red-50)' : 'var(--bg-surface)',
+      borderColor: hasError ? 'var(--error-red)' : 'var(--neutral-200)',
+      color: 'var(--neutral-900)'
+    };
 
     switch (property.type) {
       case 'text':
@@ -60,6 +66,7 @@ export function DynamicPropertyForm({
             value={fieldValue}
             onChange={(e) => handleChange(property.name, e.target.value)}
             className={baseInputClasses}
+            style={baseInputStyles}
             placeholder={property.description}
             maxLength={rules.maxLength}
           />
@@ -71,6 +78,7 @@ export function DynamicPropertyForm({
             value={fieldValue}
             onChange={(e) => handleChange(property.name, e.target.value)}
             className={`${baseInputClasses} resize-none`}
+            style={baseInputStyles}
             rows={3}
             placeholder={property.description}
           />
@@ -83,6 +91,7 @@ export function DynamicPropertyForm({
             value={fieldValue}
             onChange={(e) => handleChange(property.name, parseFloat(e.target.value) || 0)}
             className={baseInputClasses}
+            style={baseInputStyles}
             placeholder={property.description}
             min={rules.min}
             max={rules.max}
@@ -94,13 +103,14 @@ export function DynamicPropertyForm({
         return (
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <span className="text-gray-500 sm:text-sm">$</span>
+              <span style={{ color: 'var(--neutral-500)' }} className="text-sm">$</span>
             </div>
             <input
               type="number"
               value={fieldValue}
               onChange={(e) => handleChange(property.name, parseFloat(e.target.value) || 0)}
               className={`${baseInputClasses} pl-7`}
+              style={baseInputStyles}
               placeholder="0.00"
               min="0"
               step="0.01"
@@ -115,6 +125,7 @@ export function DynamicPropertyForm({
             value={fieldValue}
             onChange={(e) => handleChange(property.name, e.target.value)}
             className={baseInputClasses}
+            style={baseInputStyles}
           />
         );
 
@@ -126,9 +137,16 @@ export function DynamicPropertyForm({
                 type="checkbox"
                 checked={fieldValue || false}
                 onChange={(e) => handleChange(property.name, e.target.checked)}
-                className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                className="rounded focus:ring-2 focus:ring-blue-500 transition-all duration-200 min-w-[20px] min-h-[20px]"
+                style={{
+                  accentColor: 'var(--primary-blue)',
+                  borderColor: 'var(--neutral-300)'
+                }}
               />
-              <span className="ml-2 text-sm text-gray-700">
+              <span 
+                className="ml-2 text-sm"
+                style={{ color: 'var(--neutral-700)' }}
+              >
                 {property.description || 'Enable this option'}
               </span>
             </label>
@@ -142,6 +160,7 @@ export function DynamicPropertyForm({
             value={fieldValue}
             onChange={(e) => handleChange(property.name, e.target.value)}
             className={baseInputClasses}
+            style={baseInputStyles}
           >
             <option value="">Select an option...</option>
             {options.map((option: any) => (
@@ -159,6 +178,7 @@ export function DynamicPropertyForm({
             value={fieldValue}
             onChange={(e) => handleChange(property.name, e.target.value)}
             className={baseInputClasses}
+            style={baseInputStyles}
             placeholder={property.description}
           />
         );
@@ -167,7 +187,10 @@ export function DynamicPropertyForm({
 
   if (!schema?.properties || schema.properties.length === 0) {
     return (
-      <div className="text-sm text-gray-500 italic">
+      <div 
+        className="text-sm italic"
+        style={{ color: 'var(--neutral-500)' }}
+      >
         No additional properties for this category.
       </div>
     );

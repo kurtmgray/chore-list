@@ -160,6 +160,102 @@ This research provides a foundation for future template implementation while mai
 
 ---
 
+## 📄 PAPER-FRIENDLY EXPORT SYSTEM
+
+### Monthly Chore Matrix PDF Export - **FUTURE FEATURE**
+
+**Concept**: Generate printable PDF sheets for offline chore tracking during a full month period.
+
+#### Core Idea Refined:
+Create **2-sheet PDF export system** covering a full calendar month:
+
+**Sheet 1: Daily Tasks Matrix**
+- **Layout**: 31-day grid (7 columns × 5 rows) with each day as a cell
+- **Content**: Only daily frequency chores listed in each day's cell
+- **Headers**: Month/Year, Day numbers, weekday abbreviations
+- **Checkboxes**: Small checkbox next to each chore for manual completion tracking
+- **Format**: Compact text, 2-3 daily chores max per cell for readability
+
+**Sheet 2: Weekly/Monthly Tasks Matrix**  
+- **Layout**: 4-week calendar grid + monthly section
+- **Weekly Section**: 4 rows of 7-day columns showing weekly/biweekly chores
+- **Monthly Section**: Dedicated area listing all monthly chores with checkboxes
+- **Headers**: Week numbers, dates, frequency type indicators
+- **Visual Grouping**: Different background shading for weekly vs monthly tasks
+
+#### Smart Content Selection:
+- **Frequency-based filtering**: Auto-populate based on chore frequency types
+- **Assignment filtering**: Option to generate sheets per person or combined household
+- **Month boundary logic**: Handle month transitions and varying month lengths
+- **Recurring projection**: Same logic as calendar view to show all instances
+
+#### PDF Generation Technical Approach:
+```typescript
+// Potential implementation structure
+interface PDFExportConfig {
+  month: number;           // 1-12
+  year: number;           // 2024, 2025, etc.
+  assigneeFilter?: number; // null = all household members
+  includeCompleted?: boolean; // default false for clean sheets
+}
+
+interface MonthlyChoreMatrix {
+  dailyTasks: {
+    [dayOfMonth: number]: CalendarChore[]
+  };
+  weeklyTasks: {
+    [weekNumber: number]: CalendarChore[]
+  };
+  monthlyTasks: CalendarChore[];
+}
+```
+
+#### Use Cases & Benefits:
+1. **Vacation/Travel**: Print sheets before trips where digital access is limited
+2. **Shared Spaces**: Post on fridge/bulletin board for easy family reference  
+3. **Backup System**: Paper fallback when phones/devices are charging or unavailable
+4. **Visual Planning**: Physical month overview for planning and scheduling
+5. **Completion Tracking**: Satisfying physical checkbox completion experience
+
+#### Design Requirements:
+- **Print-optimized**: Black & white friendly, clear fonts, proper margins
+- **Space-efficient**: Fit meaningful content without cramping
+- **Checkbox clarity**: Proper sizing for pen/pencil marking
+- **Header information**: Month, household name, generation date, legend
+- **Paper size**: Standard 8.5x11" portrait orientation
+
+#### Technical Implementation Path:
+**Phase 1: Core PDF Generation**
+- Integrate PDF library (jsPDF, Puppeteer, or similar)
+- Create month calculation and chore projection logic
+- Build basic 2-sheet template with static content
+
+**Phase 2: Dynamic Content Population**
+- Connect to existing calendar projection logic
+- Add filtering by assignee and frequency type
+- Implement smart content sizing and overflow handling
+
+**Phase 3: UI Integration & Export Controls**
+- Add "Export PDF" button to calendar view
+- Create export configuration modal (month selection, filters)
+- Add print preview functionality
+
+**Phase 4: Design Polish & Advanced Features**
+- Custom household branding/logos
+- Multiple paper size options (A4, letter, etc.)
+- Accessibility improvements for print disabilities
+- Batch export (multiple months, multiple assignees)
+
+#### Integration Points:
+- **Calendar View**: Natural place for export button and month selection
+- **Existing Projection Logic**: Reuse `projectChoreInstances` function
+- **Filtering System**: Leverage existing frequency and assignee filters
+- **Data Structure**: Use existing `CalendarChore` interfaces
+
+This creates a bridge between digital convenience and physical utility, perfect for households that want the best of both worlds.
+
+---
+
 ## 🔄 HIGH PRIORITY ITEMS
 
 ### 1. Shared Component Extraction - **HIGH PRIORITY**

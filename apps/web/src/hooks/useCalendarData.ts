@@ -136,28 +136,12 @@ export function useCalendarData() {
   
   // Project all chore instances within the 4-week range
   const projectedChoreInstances = useMemo(() => {
-    console.log('Calendar date range:', { start, end });
-    console.log('All chores with due dates:', allChores.filter(c => c.next_due).map(c => ({
-      id: c.id,
-      title: c.title,
-      next_due: c.next_due,
-      frequency_name: (c as any).frequency_name
-    })));
-    
     // Project all recurring instances for each chore
     const allInstances = [];
     for (const chore of allChores) {
       const instances = projectChoreInstances(chore, start, end);
       allInstances.push(...instances);
     }
-    
-    console.log('Projected chore instances:', allInstances.length);
-    console.log('Sample projected instances:', allInstances.slice(0, 5).map(i => ({
-      title: i.chore.title,
-      originalDue: i.chore.next_due,
-      projectedDate: i.projectedDate.toDateString(),
-      frequency: i.chore.frequency_name
-    })));
     
     return allInstances;
   }, [allChores, start, end]);

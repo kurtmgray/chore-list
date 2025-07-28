@@ -1,8 +1,9 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { PageTransition, FadeInUp } from '../components/PageTransition';
 import { useCalendarData } from '../hooks/useCalendarData';
 import { useCalendarFiltering } from '../hooks/useCalendarFiltering';
-import { CalendarGrid, CalendarFilters } from '../components/Calendar';
+import { CalendarGrid, CalendarFilters, DayDetailModal } from '../components/Calendar';
+import type { CalendarDayData } from '../hooks/useCalendarData';
 
 export function Calendar() {
   // Fetch calendar data
@@ -10,6 +11,9 @@ export function Calendar() {
   
   // Calendar filtering
   const { selectedFrequency, setSelectedFrequency, filterChores } = useCalendarFiltering();
+  
+  // Day detail modal state
+  const [selectedDay, setSelectedDay] = useState<CalendarDayData | null>(null);
 
   // Apply filtering to calendar data
   const filteredWeeks = useMemo(() => {
@@ -29,10 +33,9 @@ export function Calendar() {
     }, 0);
   }, [filteredWeeks]);
 
-  // Handle day click (future: open day detail modal)
-  const handleDayClick = (day: any) => {
-    console.log('Day clicked:', day);
-    // TODO: Open day detail modal in Phase 2
+  // Handle day click to open day detail modal
+  const handleDayClick = (day: CalendarDayData) => {
+    setSelectedDay(day);
   };
 
   if (isLoading) {
@@ -131,6 +134,12 @@ export function Calendar() {
             )}
           </div>
         </FadeInUp>
+
+        {/* Day Detail Modal */}
+        <DayDetailModal
+          day={selectedDay}
+          onClose={() => setSelectedDay(null)}
+        />
       </div>
     </PageTransition>
   );

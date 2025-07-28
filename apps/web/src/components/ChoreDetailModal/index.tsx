@@ -6,6 +6,7 @@ import { ChoreStatusGrid } from './ChoreStatusGrid';
 import { ChoreDescriptionField } from './ChoreDescriptionField';
 import { ChoreNotesField } from './ChoreNotesField';
 import { ChoreFrequencyInfo } from './ChoreFrequencyInfo';
+import { ChoreSchedulingPreferences } from './ChoreSchedulingPreferences';
 import { ChoreActions } from './ChoreActions';
 import { LoadingState } from './LoadingState';
 import { ErrorState } from './ErrorState';
@@ -27,6 +28,9 @@ export function ChoreDetailModal({
   const [editedNotes, setEditedNotes] = useState('');
   const [editedDescription, setEditedDescription] = useState('');
   const [editedFrequencyTypeId, setEditedFrequencyTypeId] = useState(0);
+  const [editedPreferredDay, setEditedPreferredDay] = useState<number | null>(null);
+  const [editedPreferredWeek, setEditedPreferredWeek] = useState<number | null>(null);
+  const [scheduleChangeScope, setScheduleChangeScope] = useState<'once' | 'always'>('once');
 
   // Fetch chore details
   const { data: chore, isLoading } = trpc.chores.getById.useQuery(
@@ -49,11 +53,20 @@ export function ChoreDetailModal({
   };
 
   const handleSaveEdit = () => {
+    // Prepare properties object for preferred week (monthly+ chores)
+    const currentProperties = choreWithCategory?.properties || {};
+    const updatedProperties = editedPreferredWeek !== null 
+      ? { ...currentProperties, preferred_week: editedPreferredWeek }
+      : currentProperties;
+
     updateMutation.mutate({
       id: choreId,
       notes: editedNotes,
       short_description: editedDescription,
       frequency_type_id: editedFrequencyTypeId,
+      suggested_day_of_week: editedPreferredDay,
+      properties: updatedProperties,
+      // TODO: Implement schedule_change_scope in backend for "once" vs "always"
     });
   };
 
@@ -61,6 +74,9 @@ export function ChoreDetailModal({
     setEditedNotes(choreWithCategory?.notes || '');
     setEditedDescription(choreWithCategory?.short_description || '');
     setEditedFrequencyTypeId(choreWithCategory?.frequency_type_id || 0);
+    setEditedPreferredDay(choreWithCategory?.suggested_day_of_week || null);
+    setEditedPreferredWeek(choreWithCategory?.properties?.preferred_week || null);
+    setScheduleChangeScope('once'); // Default to "once" for safety
     setIsEditing(true);
   };
 
@@ -69,6 +85,9 @@ export function ChoreDetailModal({
     setEditedNotes('');
     setEditedDescription('');
     setEditedFrequencyTypeId(0);
+    setEditedPreferredDay(null);
+    setEditedPreferredWeek(null);
+    setScheduleChangeScope('once');
   };
 
   // Add/remove modal-open class to body when modal opens/closes
@@ -111,32 +130,23 @@ export function ChoreDetailModal({
   }
 
   return (
-    <div 
-      className="!fixed !inset-0 !z-50 !m-0 md:!flex md:!items-start md:!justify-center md:!pt-8 md:!pb-8"
-      style={{ 
-        backgroundColor: 'rgba(255, 255, 255, 0.1)',
-        backdropFilter: 'blur(12px)',
-        margin: '0 !important',
-        top: '0 !important',
-        left: '0 !important',
-        right: '0 !important',
-        bottom: '0 !important'
-      }}
-      onClick={onClose}
-    >
+    <div className="fixed inset-0 z-50 overflow-y-auto">
+      {/* Backdrop */}
       <div 
-        className="w-full h-full md:w-auto md:h-auto md:max-w-3xl md:max-h-[calc(100vh-4rem)] overflow-y-auto md:rounded-xl"
-        style={{
-          background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
-          border: '1px solid rgba(226, 232, 240, 0.8)',
-          backdropFilter: 'blur(20px)'
-        }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <ChoreDetailHeader choreWithCategory={choreWithCategory} onClose={onClose} />
+        className="fixed inset-0 bg-black bg-opacity-50 transition-opacity backdrop-blur-sm"
+        onClick={onClose}
+      />
 
-        {/* Content */}
-        <div className="p-4 lg:p-5 space-y-4" style={{ background: '#ffffff' }}>
+      {/* Modal */}
+      <div className="flex min-h-full items-center justify-center p-2 sm:p-4">
+        <div 
+          className="relative w-full max-w-md mx-3 sm:max-w-lg lg:max-w-3xl transform transition-all max-h-[90vh] overflow-hidden gradient-surface rounded-xl shadow-floating"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <ChoreDetailHeader choreWithCategory={choreWithCategory} onClose={onClose} />
+
+          {/* Content */}
+          <div className="p-3 sm:p-4 lg:p-5 space-y-3 sm:space-y-4 overflow-y-auto max-h-[calc(90vh-8rem)]">
           <ChoreStatusGrid choreWithCategory={choreWithCategory} users={users} />
 
           <ChoreDescriptionField 
@@ -160,6 +170,19 @@ export function ChoreDetailModal({
             onFrequencyChange={setEditedFrequencyTypeId}
             frequencyTypes={frequencyTypes}
           />
+
+          <ChoreSchedulingPreferences
+            choreWithCategory={choreWithCategory}
+            isEditing={isEditing}
+            editedFrequencyTypeId={editedFrequencyTypeId}
+            editedPreferredDay={editedPreferredDay}
+            editedPreferredWeek={editedPreferredWeek}
+            scheduleChangeScope={scheduleChangeScope}
+            onPreferredDayChange={setEditedPreferredDay}
+            onPreferredWeekChange={setEditedPreferredWeek}
+            onScopeChange={setScheduleChangeScope}
+            frequencyTypes={frequencyTypes}
+          />
         </div>
 
         <ChoreActions 
@@ -173,6 +196,7 @@ export function ChoreDetailModal({
           isCompleting={completeMutation.isPending}
           isUpdating={updateMutation.isPending}
         />
+        </div>
       </div>
     </div>
   );

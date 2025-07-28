@@ -8,9 +8,6 @@ export function useCalendarFiltering() {
   
   // Get frequency types for filter options
   const { data: frequencyTypes = [] } = trpc.frequencyTypes.getAll.useQuery();
-  
-  // Debug logging
-  console.log('Frequency types loaded:', frequencyTypes);
 
   // Filter options for the dropdown
   const filterOptions = useMemo(() => {
@@ -28,13 +25,11 @@ export function useCalendarFiltering() {
   // Quick filter buttons for common frequencies
   const quickFilters = useMemo(() => {
     // Find common frequency types by name
-    const daily = frequencyTypes.find(f => f.name.toLowerCase().includes('daily'));
     const weekly = frequencyTypes.find(f => f.name.toLowerCase().includes('weekly') && !f.name.toLowerCase().includes('biweekly'));
     const biweekly = frequencyTypes.find(f => f.name.toLowerCase().includes('biweekly'));
     const monthly = frequencyTypes.find(f => f.name.toLowerCase().includes('monthly'));
 
     const filters = [];
-    if (daily) filters.push({ id: daily.id, name: 'Daily', icon: '📅' });
     if (weekly) filters.push({ id: weekly.id, name: 'Weekly', icon: '📊' });
     if (biweekly) filters.push({ id: biweekly.id, name: 'Bi-weekly', icon: '📈' });
     if (monthly) filters.push({ id: monthly.id, name: 'Monthly', icon: '📆' });
@@ -49,18 +44,19 @@ export function useCalendarFiltering() {
         return chores;
       }
       
-      // Debug logging
-      console.log('Filtering chores:', {
-        selectedFrequency,
-        totalChores: chores.length,
-        sampleChore: chores[0],
-        choreFrequencyNames: chores.map(c => c.frequency_name)
-      });
+      // Find the selected frequency type
+      const selectedFrequencyType = frequencyTypes.find(f => f.id === selectedFrequency);
+      if (!selectedFrequencyType) {
+        return chores;
+      }
       
-      // For now, just return all chores - we'll fix filtering after projection is working
-      return chores;
+      // Filter chores by matching frequency_name
+      return chores.filter((chore: any) => {
+        const choreFrequencyName = chore.frequency_name;
+        return choreFrequencyName === selectedFrequencyType.name;
+      });
     };
-  }, [selectedFrequency]);
+  }, [selectedFrequency, frequencyTypes]);
 
   // Get current filter name for display
   const currentFilterName = useMemo(() => {

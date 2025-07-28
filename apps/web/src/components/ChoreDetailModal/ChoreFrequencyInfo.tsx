@@ -31,12 +31,11 @@ export function ChoreFrequencyInfo({
           <select
             value={editedFrequencyTypeId}
             onChange={(e) => onFrequencyChange(parseInt(e.target.value))}
-            className="w-full px-4 py-3 rounded-xl text-sm font-medium border-2 transition-all duration-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full px-3 py-2 rounded-lg text-sm border transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[44px]"
             style={{
-              backgroundColor: '#ffffff',
-              borderColor: '#e5e7eb',
-              color: '#374151',
-              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+              backgroundColor: 'var(--bg-surface)',
+              borderColor: 'var(--neutral-200)',
+              color: 'var(--neutral-900)'
             }}
           >
             <option value={0}>Select frequency...</option>

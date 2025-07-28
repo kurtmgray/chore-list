@@ -28,16 +28,16 @@ export function ChoreStatusGrid({ choreWithCategory, users }: ChoreStatusGridPro
   };
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
       <div>
         <label 
-          className="block text-xs font-semibold mb-2"
+          className="block text-xs sm:text-sm font-semibold mb-2"
           style={{ color: '#374151' }}
         >
           Status
         </label>
         <div 
-          className="px-3 py-2 rounded-lg inline-flex items-center gap-2 font-medium text-xs"
+          className="px-3 py-2 rounded-lg inline-flex items-center gap-2 font-medium text-xs sm:text-sm min-h-[36px]"
           style={{ 
             backgroundColor: choreWithCategory.status === 'completed' 
               ? '#10b981' 
